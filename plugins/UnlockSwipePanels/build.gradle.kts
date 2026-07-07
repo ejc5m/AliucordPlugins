@@ -1,5 +1,5 @@
 version = "1.0.1"
-description = "Stops the stacked swipe panels from locking to one swipe direction"
+description = "Stops the swipe one direction on a stacked swipe panel from blocking a swipe the other way"
 
 aliucord {
     changelog.set(
