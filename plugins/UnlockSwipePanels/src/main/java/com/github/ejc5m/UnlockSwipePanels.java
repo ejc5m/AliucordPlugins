@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.*;
+import com.discord.panels.OverlappingPanelsLayout;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -17,13 +18,10 @@ import java.lang.reflect.Method;
 
 public class UnlockSwipePanels extends Plugin {
     private Field swipeDirectionField;
-    private Object swipeDirectionLeft;
-    private Object swipeDirectionRight;
-
 
     @Override
     public void start(@NonNull Context context) throws Throwable {
-        Class<?> layoutClass = Class.forName("com.discord.panels.OverlappingPanelsLayout");
+        var layoutClass = OverlappingPanelsLayout.class;
 
         Method getNormalizedXMethod = layoutClass.getDeclaredMethod("getNormalizedX", float.class);
         getNormalizedXMethod.setAccessible(true);
@@ -31,21 +29,17 @@ public class UnlockSwipePanels extends Plugin {
         swipeDirectionField = layoutClass.getDeclaredField("swipeDirection");
         swipeDirectionField.setAccessible(true);
 
-        Class<?> swipeDirectionEnum = Class.forName("com.discord.panels.OverlappingPanelsLayout$SwipeDirection");
-        swipeDirectionLeft = Enum.valueOf((Class<Enum>) swipeDirectionEnum, "LEFT");
-        swipeDirectionRight = Enum.valueOf((Class<Enum>) swipeDirectionEnum, "RIGHT");
-
         patcher.patch(getNormalizedXMethod, new PreHook(cf -> {
             float targetedX = (float) cf.args[0];
             try {
                 if (targetedX > 0.0f) {
                     // Force RIGHT to unlock the right panel
-                    swipeDirectionField.set(cf.thisObject, swipeDirectionRight);
+                    swipeDirectionField.set(cf.thisObject,  OverlappingPanelsLayout.SwipeDirection.RIGHT);
                 } else if (targetedX < 0.0f) {
                     // Force LEFT to unlock the left panel
-                    swipeDirectionField.set(cf.thisObject, swipeDirectionLeft);
+                    swipeDirectionField.set(cf.thisObject,  OverlappingPanelsLayout.SwipeDirection.LEFT);
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
 
             }
         }));
@@ -53,7 +47,6 @@ public class UnlockSwipePanels extends Plugin {
 
     @Override
     public void stop(@NonNull Context context) {
-        // Remove all patches
         patcher.unpatchAll();
     }
 }
